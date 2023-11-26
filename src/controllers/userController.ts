@@ -221,3 +221,26 @@ export const addOrder = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const getAllOrders = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const user = await UserModel.findOne({ userId });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+
+		const orders = user.orders || [];
+
+		res.json({
+			success: true,
+			message: "Orders fetched successfully!",
+			data: { orders },
+		});
+	} catch (error) {
+		console.error("Error fetching orders:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
