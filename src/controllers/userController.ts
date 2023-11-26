@@ -18,3 +18,13 @@ const userZodSchema = z.object({
 		country: z.string(),
 	}),
 });
+
+const userZodSchemaWithOrders = userZodSchema.extend({
+	orders: z.array(
+		z.object({
+			productName: z.string(),
+			price: z.number(),
+			quantity: z.number(),
+		})
+	),
+});
