@@ -28,14 +28,10 @@ const userZodSchema = z.object({
 	}),
 });
 
-const userZodSchemaWithOrders = userZodSchema.extend({
-	orders: z.array(
-		z.object({
-			productName: z.string(),
-			price: z.number(),
-			quantity: z.number(),
-		})
-	),
+const orderZodSchema = z.object({
+	productName: z.string(),
+	price: z.number(),
+	quantity: z.number(),
 });
 
 export const createUser = async (req: Request, res: Response) => {

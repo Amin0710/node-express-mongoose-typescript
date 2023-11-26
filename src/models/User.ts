@@ -1,5 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IOrder {
+	productName: string;
+	price: number;
+	quantity: number;
+}
 export interface IUser extends Document {
 	userId: number;
 	username: string;
@@ -17,12 +22,14 @@ export interface IUser extends Document {
 		city: string;
 		country: string;
 	};
-	orders: Array<{
-		productName: string;
-		price: number;
-		quantity: number;
-	}>;
+	orders: IOrder[];
 }
+
+const orderSchema = new Schema<IOrder>({
+	productName: { type: String, required: true },
+	price: { type: Number, required: true },
+	quantity: { type: Number, required: true },
+});
 
 const userSchema = new Schema<IUser>({
 	userId: { type: Number, required: true, unique: true },
@@ -41,13 +48,7 @@ const userSchema = new Schema<IUser>({
 		city: { type: String, required: true },
 		country: { type: String, required: true },
 	},
-	orders: [
-		{
-			productName: { type: String, required: true },
-			price: { type: Number, required: true },
-			quantity: { type: Number, required: true },
-		},
-	],
+	orders: [orderSchema],
 });
 
 const UserModel = mongoose.model<IUser>("User", userSchema);
