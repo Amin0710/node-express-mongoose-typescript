@@ -134,3 +134,37 @@ export const getUserById = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const updateUser = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const validatedData = userZodSchema.parse(req.body);
+		const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+		const updatedUser = await UserModel.findOneAndUpdate(
+			{ userId },
+			{
+				...validatedData,
+				password: hashedPassword,
+			},
+			{ new: true, projection: { password: 0 } }
+		); // Exclude password field in the response
+		if (!updatedUser) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+		res.json({
+			success: true,
+			message: "User updated successfully!",
+			data: updatedUser,
+		});
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return res
+				.status(400)
+				.json({ success: false, message: error.errors[0].message });
+		}
+		console.error("Error updating user:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
