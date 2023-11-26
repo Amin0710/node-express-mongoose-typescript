@@ -244,3 +244,30 @@ export const getAllOrders = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const calculateTotalPrice = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const user = await UserModel.findOne({ userId });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+
+		const totalPrice =
+			user.orders?.reduce(
+				(acc, order) => acc + order.price * order.quantity,
+				0
+			) || 0;
+
+		res.json({
+			success: true,
+			message: "Total price calculated successfully!",
+			data: { totalPrice },
+		});
+	} catch (error) {
+		console.error("Error calculating total price:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
