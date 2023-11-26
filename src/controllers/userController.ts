@@ -34,7 +34,7 @@ const orderZodSchema = z.object({
 	quantity: z.number(),
 });
 
-export const createUser = async (req: Request, res: Response) => {
+const createUser = async (req: Request, res: Response) => {
 	try {
 		const validatedData = userZodSchema.parse(req.body);
 
@@ -85,7 +85,7 @@ export const createUser = async (req: Request, res: Response) => {
 	}
 };
 
-export const getAllUsers = async (req: Request, res: Response) => {
+const getAllUsers = async (req: Request, res: Response) => {
 	try {
 		const users = await UserModel.find({}, { password: 0 }); // Exclude password field
 		const formattedUsers = users.map((user) => ({
@@ -111,7 +111,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
 	}
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+const getUserById = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const user = await UserModel.findOne({ userId }, { password: 0 }); // Exclude password field
@@ -131,7 +131,7 @@ export const getUserById = async (req: Request, res: Response) => {
 	}
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+const updateUser = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const validatedData = userZodSchema.parse(req.body);
@@ -165,7 +165,7 @@ export const updateUser = async (req: Request, res: Response) => {
 	}
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+const deleteUser = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const deletedUser = await UserModel.findOneAndDelete({ userId });
@@ -185,7 +185,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 	}
 };
 
-export const addOrder = async (req: Request, res: Response) => {
+const addOrder = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const validatedOrder = orderZodSchema.parse(req.body);
@@ -222,7 +222,7 @@ export const addOrder = async (req: Request, res: Response) => {
 	}
 };
 
-export const getAllOrders = async (req: Request, res: Response) => {
+const getAllOrders = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const user = await UserModel.findOne({ userId });
@@ -245,7 +245,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
 	}
 };
 
-export const calculateTotalPrice = async (req: Request, res: Response) => {
+const calculateTotalPrice = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
 		const user = await UserModel.findOne({ userId });
@@ -270,4 +270,15 @@ export const calculateTotalPrice = async (req: Request, res: Response) => {
 		console.error("Error calculating total price:", error);
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
+};
+
+export const Controllers = {
+	createUser,
+	getAllUsers,
+	getUserById,
+	updateUser,
+	deleteUser,
+	addOrder,
+	getAllOrders,
+	calculateTotalPrice,
 };
