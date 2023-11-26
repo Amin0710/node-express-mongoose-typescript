@@ -168,3 +168,23 @@ export const updateUser = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const deleteUser = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const deletedUser = await UserModel.findOneAndDelete({ userId });
+		if (!deletedUser) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+		res.json({
+			success: true,
+			message: "User deleted successfully!",
+			data: null,
+		});
+	} catch (error) {
+		console.error("Error deleting user:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
