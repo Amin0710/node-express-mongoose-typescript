@@ -114,3 +114,23 @@ export const getAllUsers = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const getUserById = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const user = await UserModel.findOne({ userId }, { password: 0 }); // Exclude password field
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+		res.json({
+			success: true,
+			message: "User fetched successfully!",
+			data: user,
+		});
+	} catch (error) {
+		console.error("Error fetching user:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
