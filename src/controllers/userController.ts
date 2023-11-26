@@ -88,3 +88,29 @@ export const createUser = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const getAllUsers = async (req: Request, res: Response) => {
+	try {
+		const users = await UserModel.find({}, { password: 0 }); // Exclude password field
+		const formattedUsers = users.map((user) => ({
+			userId: user.userId,
+			username: user.username,
+			fullName: user.fullName,
+			age: user.age,
+			email: user.email,
+			address: {
+				street: user.address.street,
+				city: user.address.city,
+				country: user.address.country,
+			},
+		}));
+		res.json({
+			success: true,
+			message: "Users fetched successfully!",
+			data: formattedUsers,
+		});
+	} catch (error) {
+		console.error("Error fetching users:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
