@@ -184,3 +184,40 @@ export const deleteUser = async (req: Request, res: Response) => {
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+export const addOrder = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const validatedOrder = orderZodSchema.parse(req.body);
+
+		const user = await UserModel.findOne({ userId });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
+
+		// If 'orders' property already exists, append the new order; otherwise, create 'orders' array
+		if (user.orders) {
+			user.orders.push(validatedOrder);
+		} else {
+			user.orders = [validatedOrder];
+		}
+
+		await user.save();
+
+		res.json({
+			success: true,
+			message: "Order created successfully!",
+			data: null,
+		});
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return res
+				.status(400)
+				.json({ success: false, message: error.errors[0].message });
+		}
+		console.error("Error adding order:", error);
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
