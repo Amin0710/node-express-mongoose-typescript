@@ -5,13 +5,7 @@ import { z } from "zod";
 
 const userZodSchema = z.object({
 	userId: z.number(),
-	username: z
-		.string()
-		.min(1)
-		.max(20)
-		.refine((value) => /^[A-Z]/.test(value), {
-			message: "Username must start with a capital letter",
-		}),
+	username: z.string(),
 	password: z.string(),
 	fullName: z.object({
 		firstName: z.string(),
@@ -81,7 +75,7 @@ const createUser = async (req: Request, res: Response) => {
 		}
 
 		console.error("Error creating user:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -107,18 +101,26 @@ const getAllUsers = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Error fetching users:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
 const getUserById = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
-		const user = await UserModel.findOne({ userId }, { password: 0 }); // Exclude password field
+		const user = await UserModel.findOne(
+			{ userId },
+			{ password: 0, orders: 0 }
+		); // Exclude password field
 		if (!user) {
-			return res
-				.status(404)
-				.json({ success: false, message: "User not found" });
+			return res.status(404).json({
+				success: false,
+				message: "User not found",
+				error: {
+					code: 404,
+					description: "User not found!",
+				},
+			});
 		}
 		res.json({
 			success: true,
@@ -127,7 +129,7 @@ const getUserById = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Error fetching user:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -142,7 +144,7 @@ const updateUser = async (req: Request, res: Response) => {
 				...validatedData,
 				password: hashedPassword,
 			},
-			{ new: true, projection: { password: 0 } }
+			{ new: true, projection: { password: 0, orders: 0 } }
 		); // Exclude password field in the response
 		if (!updatedUser) {
 			return res
@@ -161,7 +163,7 @@ const updateUser = async (req: Request, res: Response) => {
 				.json({ success: false, message: error.errors[0].message });
 		}
 		console.error("Error updating user:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -181,7 +183,7 @@ const deleteUser = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Error deleting user:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -192,9 +194,14 @@ const addOrder = async (req: Request, res: Response) => {
 
 		const user = await UserModel.findOne({ userId });
 		if (!user) {
-			return res
-				.status(404)
-				.json({ success: false, message: "User not found" });
+			return res.status(404).json({
+				success: false,
+				message: "User not found",
+				error: {
+					code: 404,
+					description: "User not found!",
+				},
+			});
 		}
 
 		// If 'orders' property already exists, append the new order; otherwise, create 'orders' array
@@ -218,7 +225,7 @@ const addOrder = async (req: Request, res: Response) => {
 				.json({ success: false, message: error.errors[0].message });
 		}
 		console.error("Error adding order:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -227,9 +234,14 @@ const getAllOrders = async (req: Request, res: Response) => {
 		const userId = req.params.userId;
 		const user = await UserModel.findOne({ userId });
 		if (!user) {
-			return res
-				.status(404)
-				.json({ success: false, message: "User not found" });
+			return res.status(404).json({
+				success: false,
+				message: "User not found",
+				error: {
+					code: 404,
+					description: "User not found!",
+				},
+			});
 		}
 
 		const orders = user.orders || [];
@@ -241,7 +253,7 @@ const getAllOrders = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Error fetching orders:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
@@ -250,9 +262,14 @@ const calculateTotalPrice = async (req: Request, res: Response) => {
 		const userId = req.params.userId;
 		const user = await UserModel.findOne({ userId });
 		if (!user) {
-			return res
-				.status(404)
-				.json({ success: false, message: "User not found" });
+			return res.status(404).json({
+				success: false,
+				message: "User not found",
+				error: {
+					code: 404,
+					description: "User not found!",
+				},
+			});
 		}
 
 		const totalPrice =
@@ -268,7 +285,7 @@ const calculateTotalPrice = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Error calculating total price:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		res.status(500).json({ success: false, message: { error } });
 	}
 };
 
