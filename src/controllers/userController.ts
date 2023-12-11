@@ -22,6 +22,28 @@ const userZodSchema = z.object({
 	}),
 });
 
+const userUpdateZodSchema = z.object({
+	username: z.string().optional(),
+	password: z.string().optional(),
+	fullName: z
+		.object({
+			firstName: z.string().optional(),
+			lastName: z.string().optional(),
+		})
+		.optional(),
+	age: z.number().optional(),
+	email: z.string().optional(),
+	isActive: z.boolean().optional(),
+	hobbies: z.array(z.string()).optional(),
+	address: z
+		.object({
+			street: z.string().optional(),
+			city: z.string().optional(),
+			country: z.string().optional(),
+		})
+		.optional(),
+});
+
 const orderZodSchema = z.object({
 	productName: z.string(),
 	price: z.number(),
@@ -50,20 +72,20 @@ const createUser = async (req: Request, res: Response) => {
 			success: true,
 			message: "User created successfully!",
 			data: {
-				userId: "number",
-				username: "string",
+				userId: savedUser.userId,
+				username: savedUser.username,
 				fullName: {
-					firstName: "string",
-					lastName: "string",
+					firstName: savedUser.fullName.firstName,
+					lastName: savedUser.fullName.lastName,
 				},
-				age: "number",
-				email: "string",
-				isActive: "boolean",
+				age: savedUser.age,
+				email: savedUser.email,
+				isActive: savedUser.isActive,
 				hobbies: savedUser.hobbies,
 				address: {
-					street: "string",
-					city: "string",
-					country: "string",
+					street: savedUser.address.street,
+					city: savedUser.address.city,
+					country: savedUser.address.country,
 				},
 			},
 		});
@@ -136,32 +158,40 @@ const getUserById = async (req: Request, res: Response) => {
 const updateUser = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
-		const validatedData = userZodSchema.parse(req.body);
-		const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-		const updatedUser = await UserModel.findOneAndUpdate(
-			{ userId },
-			{
-				...validatedData,
-				password: hashedPassword,
-			},
-			{ new: true, projection: { password: 0, orders: 0 } }
-		); // Exclude password field in the response
-		if (!updatedUser) {
-			return res
-				.status(404)
-				.json({ success: false, message: "User not found" });
+		const validatedData = userUpdateZodSchema.safeParse(req.body);
+
+		if (validatedData.success) {
+			const hashedPassword = validatedData.data.password
+				? await bcrypt.hash(validatedData.data.password, 10)
+				: undefined;
+
+			const updatedUser = await UserModel.findOneAndUpdate(
+				{ userId },
+				{
+					...validatedData.data,
+					password: hashedPassword,
+				},
+				{ new: true, projection: { password: 0, orders: 0 } }
+			); // Exclude password field in the response
+
+			if (!updatedUser) {
+				return res
+					.status(404)
+					.json({ success: false, message: "User not found" });
+			}
+
+			res.json({
+				success: true,
+				message: "User updated successfully!",
+				data: updatedUser,
+			});
+		} else {
+			res.status(400).json({
+				success: false,
+				message: validatedData.error.errors[0].message,
+			});
 		}
-		res.json({
-			success: true,
-			message: "User updated successfully!",
-			data: updatedUser,
-		});
 	} catch (error) {
-		if (error instanceof z.ZodError) {
-			return res
-				.status(400)
-				.json({ success: false, message: error.errors[0].message });
-		}
 		console.error("Error updating user:", error);
 		res.status(500).json({ success: false, message: { error } });
 	}
@@ -216,7 +246,7 @@ const addOrder = async (req: Request, res: Response) => {
 		res.json({
 			success: true,
 			message: "Order created successfully!",
-			data: null,
+			data: validatedOrder,
 		});
 	} catch (error) {
 		if (error instanceof z.ZodError) {
